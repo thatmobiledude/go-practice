@@ -1,8 +1,13 @@
 package http
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -23,7 +28,7 @@ func NewHandler(service CommentService) *Handler {
 	h.mapRoutes()
 
 	h.Server = &http.Server{
-		Addr: "0.0.0.0:8080",
+		Addr:    "0.0.0.0:8080",
 		Handler: h.Router,
 	}
 
@@ -37,8 +42,25 @@ func (h *Handler) mapRoutes() {
 }
 
 func (h *Handler) Serve() error {
-	if err := h.Server.ListenAndServe(); err != nil {
-		return err
-	}
+	go func() {
+		if err := h.Server.ListenAndServe(); err != nil {
+			// shouldn't really need to handle this error.
+			// should be caught by kubernetes health / livelyness checks
+			// and unit/integration/acceptance tests
+			log.Println(err.Error())
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	// reading channel and continuing execution after this point
+	<-c
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	h.Server.Shutdown(ctx)
+
+	log.Println("shut down gracefully")
+
 	return nil
 }
