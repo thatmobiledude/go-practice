@@ -2,7 +2,14 @@ package comment
 
 import (
 	"context"
+	"errors"
 	"fmt"
+)
+
+// error definitions to not expose any db implementation details to our clients
+var (
+	ErrFetchingComment = errors.New("failed to fetch comment by id")
+	ErrNotImplemented = errors.New("not implemented")
 )
 
 // Comment - a respresentation of the comment structure for our service
@@ -38,8 +45,20 @@ func (s *Service) GetComment(ctx context.Context, id string) (Comment, error) {
 	fmt.Println("Retrieving a comment")
 	cmt, err := s.Store.GetComment(ctx, id)
 	if err != nil {
-		fmt.Println(err)
-		return Comment{}, err
+		fmt.Println(err) // would usually log this to log app (e.g. DataDog, GrayLog, etc.)
+		return Comment{}, ErrFetchingComment
 	}
 	return cmt, nil
+}
+
+func (s *Service) UpdateComment(ctx context.Context, comment Comment) error {
+	return ErrNotImplemented
+}
+
+func (s *Service) DeleteComment(ctx context.Context, comment Comment) error {
+	return ErrNotImplemented
+}
+
+func (s *Service) CreateComment(ctx context.Context, comment Comment) (Comment, error) {
+	return Comment{}, ErrNotImplemented
 }
