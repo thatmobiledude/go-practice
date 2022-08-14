@@ -13,6 +13,7 @@ type Database struct {
 	Client *sqlx.DB
 }
 
+// NewDatabase() - used to create a connection with variables from docker-compose.yml using sqlx and postgres driver
 func NewDatabase() (*Database, error) {
 	connectionString := fmt.Sprintf(
 		"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/thatmobiledude/go-practice/internal/db"
@@ -16,8 +15,8 @@ func Run() error {
 		fmt.Println("failed to connect to the database")
 		return err
 	}
-	// this will be removed in the future; redundant since sqlx.Connect pings on intialization
-	if err := db.Ping(context.Background()); err != nil {
+	if err := db.MigrateDB(); err != nil {
+		fmt.Println("failed to migrate database")
 		return err
 	}
 	fmt.Println("successfully connected and pinged database")
