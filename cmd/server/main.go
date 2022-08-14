@@ -1,10 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/thatmobiledude/go-practice/internal/comment"
+	transportHttp "github.com/thatmobiledude/go-practice/internal/transport/http"
 	"github.com/thatmobiledude/go-practice/internal/db"
 )
 
@@ -25,20 +25,10 @@ func Run() error {
 
 	cmtService := comment.NewService(db)
 
-	cmtService.PostComment(
-		context.Background(),
-		comment.Comment{
-			ID:     "71c5d074-b6cf-11ec-b909-0242ac120002",
-			Slug:   "manual-test",
-			Author: "Bender Rodriguez",
-			Body:   "Eat my shiny metal a**",
-		},
-	)
-
-	fmt.Println(cmtService.GetComment(
-		context.Background(),
-		"71c5d074-b6cf-11ec-b909-0242ac120002",
-	))
+	httpHandler := transportHttp.NewHandler(cmtService)
+	if err := httpHandler.Serve(); err != nil {
+		return err
+	}
 
 	return nil
 }
