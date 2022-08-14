@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/thatmobiledude/go-practice/internal/comment"
 	"github.com/thatmobiledude/go-practice/internal/db"
 )
 
@@ -20,6 +22,12 @@ func Run() error {
 		return err
 	}
 	fmt.Println("successfully connected and pinged database")
+
+	cmtService := comment.NewService(db)
+	fmt.Println(cmtService.GetComment(
+		context.Background(),
+		"71c5d074-b6cf-11ec-b909-0242ac120002",
+	))
 
 	return nil
 }
