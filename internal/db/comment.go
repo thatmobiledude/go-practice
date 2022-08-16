@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/thatmobiledude/go-practice/internal/comment"
-	"github.com/satori/go.uuid"
 )
 
 type CommentRow struct {
@@ -30,6 +30,11 @@ func (d *Database) GetComment(
 	uuid string,
 ) (comment.Comment, error) {
 	var cmtRow CommentRow
+	_, err := d.Client.ExecContext(ctx, "SELECT pg_sleep(16)")
+	if err != nil {
+		return comment.Comment{}, err
+	}
+
 	row := d.Client.QueryRowContext(
 		ctx,
 		`SELECT id, slug, body, author
@@ -37,7 +42,7 @@ func (d *Database) GetComment(
 		WHERE id = $1`,
 		uuid,
 	)
-	err := row.Scan(&cmtRow.ID, &cmtRow.Slug, &cmtRow.Body, &cmtRow.Author)
+	err = row.Scan(&cmtRow.ID, &cmtRow.Slug, &cmtRow.Body, &cmtRow.Author)
 	if err != nil {
 		return comment.Comment{}, fmt.Errorf("error fetching the comment by uuid: %w", err)
 	}
@@ -48,10 +53,10 @@ func (d *Database) GetComment(
 func (d *Database) PostComment(ctx context.Context, cmt comment.Comment) (comment.Comment, error) {
 	cmt.ID = uuid.NewV4().String()
 	postRow := CommentRow{
-		ID: cmt.ID,
-		Slug: sql.NullString{String: cmt.Slug, Valid: true},
+		ID:     cmt.ID,
+		Slug:   sql.NullString{String: cmt.Slug, Valid: true},
 		Author: sql.NullString{String: cmt.Author, Valid: true},
-		Body: sql.NullString{String: cmt.Body, Valid: true},
+		Body:   sql.NullString{String: cmt.Body, Valid: true},
 	}
 	rows, err := d.Client.NamedQueryContext(
 		ctx,
@@ -82,18 +87,18 @@ func (d *Database) DeleteComment(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to delete comment from database: %w", err)
 	}
 	return nil
-} 
+}
 
 func (d *Database) UpdateComment(
-	ctx context.Context, 
-	id string, 
+	ctx context.Context,
+	id string,
 	cmt comment.Comment,
 ) (comment.Comment, error) {
 	cmtRow := CommentRow{
-		ID: id,
-		Slug: sql.NullString{String: cmt.Slug, Valid: true},
+		ID:     id,
+		Slug:   sql.NullString{String: cmt.Slug, Valid: true},
 		Author: sql.NullString{String: cmt.Author, Valid: true},
-		Body: sql.NullString{String: cmt.Body, Valid: true},
+		Body:   sql.NullString{String: cmt.Body, Valid: true},
 	}
 	rows, err := d.Client.NamedQueryContext(
 		ctx,
@@ -110,6 +115,6 @@ func (d *Database) UpdateComment(
 	if err := rows.Close(); err != nil {
 		return comment.Comment{}, fmt.Errorf("failed to close rows: %w", err)
 	}
-	
+
 	return convertCommentRowToComment(cmtRow), nil
 }
